@@ -1,0 +1,2011 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>星界-2.1.12</title>
+    <style>
+        :root {
+            --primary: #00ff88;
+            --primary-dark: #00cc6a;
+            --secondary: #6c63ff;
+            --background: #0a0a0f;
+            --surface: #1a1a2e;
+            --surface-light: #2d2d44;
+            --text: #ffffff;
+            --text-secondary: #b0b0b0;
+            --error: #ff4757;
+            --success: #2ed573;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            overflow: hidden;
+            height: 100vh;
+            touch-action: manipulation;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+        }
+
+        /* 顶部导航 */
+        .header {
+            background: var(--surface);
+            padding: 15px;
+            border-bottom: 1px solid var(--surface-light);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            z-index: 100;
+        }
+
+        .header-title {
+            color: var(--primary);
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.2em;
+            padding: 8px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: background 0.3s ease;
+        }
+
+        .icon-btn:active {
+            background: var(--surface-light);
+        }
+
+        /* 主要内容区域 */
+        .main-content {
+            flex: 1;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* 页面容器 */
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--background);
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .page.active {
+            transform: translateX(0);
+        }
+
+        .page.previous {
+            transform: translateX(-100%);
+        }
+
+        /* 服务器列表页面 */
+        .server-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .server-item {
+            padding: 15px;
+            margin: 10px 0;
+            background: var(--surface);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .server-item:active {
+            transform: scale(0.98);
+            background: var(--surface-light);
+        }
+
+        .server-item.active {
+            border-color: var(--primary);
+        }
+
+        .server-lock {
+            color: var(--primary);
+            font-size: 0.8em;
+            margin-left: 5px;
+        }
+
+        .server-info {
+            font-size: 0.9em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* 聊天页面 */
+        .chat-header {
+            background: var(--surface);
+            padding: 15px;
+            border-bottom: 1px solid var(--surface-light);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .back-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.2em;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+        }
+
+        .back-btn:active {
+            background: var(--surface-light);
+        }
+
+        .chat-info {
+            flex: 1;
+        }
+
+        .chat-title {
+            color: var(--primary);
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .online-indicator {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.8em;
+            color: var(--success);
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: var(--background);
+        }
+
+        .message {
+            margin: 12px 0;
+            padding: 12px;
+            background: var(--surface);
+            border-radius: 12px;
+            border-left: 3px solid var(--primary);
+            animation: slideIn 0.3s ease;
+        }
+
+        .message.private {
+            border-left-color: var(--secondary);
+            background: linear-gradient(135deg, var(--surface) 0%, #2a2a3e 100%);
+        }
+
+        .message.ai {
+            border-left-color: #ff6b6b;
+            background: linear-gradient(135deg, var(--surface) 0%, #3e2a2a 100%);
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .message-sender {
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .message-private .message-sender {
+            color: var(--secondary);
+        }
+
+        .message-ai .message-sender {
+            color: #ff6b6b;
+        }
+
+        .message-content {
+            line-height: 1.4;
+            font-size: 0.95em;
+        }
+
+        .file-attachment {
+            margin-top: 8px;
+            padding: 8px;
+            background: var(--surface-light);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .file-icon {
+            color: var(--primary);
+        }
+
+        .file-download {
+            color: var(--secondary);
+            text-decoration: none;
+            margin-left: auto;
+            font-size: 0.85em;
+        }
+
+        .input-area {
+            background: var(--surface);
+            border-top: 1px solid var(--surface-light);
+            padding: 15px;
+        }
+
+        .message-input-container {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .message-input {
+            flex: 1;
+            padding: 12px;
+            background: var(--surface-light);
+            border: 1px solid var(--surface-light);
+            border-radius: 20px;
+            color: var(--text);
+            font-size: 1em;
+            resize: none;
+            outline: none;
+            min-height: 44px;
+            max-height: 120px;
+        }
+
+        .message-input:focus {
+            border-color: var(--primary);
+        }
+
+        .send-btn {
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            border-radius: 50%;
+            width: 44px;
+            height: 44px;
+            color: var(--background);
+            font-size: 1.2em;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+        }
+
+        .send-btn:active {
+            transform: scale(0.95);
+        }
+
+        .send-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* 好友页面 */
+        .friends-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .friend-item {
+            padding: 15px;
+            margin: 8px 0;
+            background: var(--surface);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .friend-item:active {
+            background: var(--surface-light);
+        }
+
+        .friend-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+
+        .friend-info {
+            flex: 1;
+        }
+
+        .friend-name {
+            font-weight: bold;
+            margin-bottom: 2px;
+        }
+
+        .friend-signature {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        /* 搜索页面 */
+        .search-container {
+            padding: 15px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--surface-light);
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--surface-light);
+            border: 1px solid var(--surface-light);
+            border-radius: 20px;
+            color: var(--text);
+            font-size: 1em;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .search-results {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .search-result-item {
+            padding: 15px;
+            margin: 8px 0;
+            background: var(--surface);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .search-result-item:active {
+            background: var(--surface-light);
+        }
+
+        /* 底部导航 */
+        .bottom-nav {
+            background: var(--surface);
+            border-top: 1px solid var(--surface-light);
+            display: flex;
+            padding: 10px 0;
+            position: relative;
+            z-index: 100;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 8px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .nav-item:active {
+            background: var(--surface-light);
+        }
+
+        .nav-item.active {
+            color: var(--primary);
+        }
+
+        .nav-icon {
+            font-size: 1.4em;
+            margin-bottom: 4px;
+        }
+
+        .nav-label {
+            font-size: 0.75em;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--surface);
+            padding: 25px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+            border: 1px solid var(--surface-light);
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            color: var(--primary);
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.3em;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9em;
+        }
+
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            background: var(--surface-light);
+            border: 1px solid var(--surface-light);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 1em;
+        }
+
+        .form-group input:focus, .form-group textarea:focus {
+            border-color: var(--primary);
+            outline: none;
+        }
+
+        .btn {
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            border: none;
+            border-radius: 12px;
+            color: var(--background);
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-size: 1em;
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 1px solid var(--surface-light);
+            color: var(--text);
+            margin-top: 10px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 12px 20px;
+            background: var(--surface);
+            border-left: 4px solid var(--primary);
+            border-radius: 8px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            animation: slideInDown 0.3s ease;
+            max-width: 90%;
+            text-align: center;
+        }
+
+        @keyframes slideInDown {
+            from { transform: translateX(-50%) translateY(-100%); opacity: 0; }
+            to { transform: translateX(-50%) translateY(0); opacity: 1; }
+        }
+
+        .dev-team {
+            text-align: center;
+            margin-top: 15px;
+            color: var(--text-secondary);
+            font-size: 0.8em;
+        }
+
+        /* 加载状态 */
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--surface-light);
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* 空状态 */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-icon {
+            font-size: 3em;
+            margin-bottom: 15px;
+            opacity: 0.5;
+        }
+
+        /* 私聊按钮样式 */
+        .chat-btn {
+            background: var(--primary);
+            color: var(--background);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chat-btn:active {
+            transform: scale(0.95);
+        }
+
+        /* 退出服务器按钮 */
+        .exit-btn {
+            background: var(--error);
+            color: var(--background);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.8em;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .exit-btn:active {
+            transform: scale(0.95);
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- 顶部导航 -->
+        <div class="header">
+            <div class="header-title" id="headerTitle">星界聊天</div>
+            <div class="header-actions" id="headerActions">
+                <button class="icon-btn" onclick="showModal('loginModal')">👤</button>
+                <button class="icon-btn" onclick="showModal('createServerModal')">➕</button>
+            </div>
+        </div>
+
+        <!-- 主要内容区域 -->
+        <div class="main-content">
+            <!-- 服务器列表页面 -->
+            <div class="page active" id="serversPage">
+                <div class="server-list" id="serverList">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 聊天页面 -->
+            <div class="page" id="chatPage">
+                <div class="chat-header">
+                    <button class="back-btn" onclick="exitChat()">←</button>
+                    <div class="chat-info">
+                        <div class="chat-title" id="chatTitle">选择服务器</div>
+                        <div class="online-indicator">
+                            <div class="dot"></div>
+                            <span id="onlineCount">0 人在线</span>
+                        </div>
+                    </div>
+                    <button class="exit-btn" id="exitServerBtn" onclick="exitServer()" style="display: none;">退出</button>
+                </div>
+                <div class="messages-container" id="messagesContainer">
+                    <div class="message">
+                        <div class="message-header">
+                            <span class="message-sender">系统</span>
+                            <span>现在</span>
+                        </div>
+                        <div class="message-content">
+                            欢迎来到星界聊天！请加入服务器开始聊天。
+                        </div>
+                    </div>
+                </div>
+                <div class="input-area">
+                    <div class="message-input-container">
+                        <textarea 
+                            class="message-input" 
+                            id="messageInput" 
+                            placeholder="输入消息..."
+                            rows="1"
+                            disabled
+                        ></textarea>
+                        <button class="send-btn" id="sendButton" onclick="sendMessage()">↑</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 好友页面 -->
+            <div class="page" id="friendsPage">
+                <div class="friends-list" id="friendsList">
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <div>暂无好友</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">去搜索页面添加好友吧</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 搜索页面 -->
+            <div class="page" id="searchPage">
+                <div class="search-container">
+                    <input type="text" class="search-input" id="userSearch" placeholder="搜索用户...">
+                </div>
+                <div class="search-results" id="searchResults">
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div>搜索用户</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">输入用户名搜索并添加好友</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部导航 -->
+        <div class="bottom-nav">
+            <button class="nav-item active" onclick="showPage('serversPage')">
+                <div class="nav-icon">🏠</div>
+                <div class="nav-label">服务器</div>
+            </button>
+            <button class="nav-item" onclick="showPage('friendsPage')">
+                <div class="nav-icon">👥</div>
+                <div class="nav-label">好友</div>
+            </button>
+            <button class="nav-item" onclick="showPage('searchPage')">
+                <div class="nav-icon">🔍</div>
+                <div class="nav-label">搜索</div>
+            </button>
+            <button class="nav-item" onclick="showModal('profileModal')">
+                <div class="nav-icon">⚙️</div>
+                <div class="nav-label">我的</div>
+            </button>
+        </div>
+    </div>
+
+    <!-- 登录/注册模态框 -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content">
+            <h2 id="modalTitle">登录星界网络</h2>
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="loginUsername" placeholder="输入用户名">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="loginPassword" placeholder="输入密码">
+            </div>
+            <button class="btn" onclick="login()">登录</button>
+            <button class="btn btn-secondary" onclick="switchToRegister()">注册新账户</button>
+            <button class="btn btn-secondary" onclick="hideModal('loginModal')">取消</button>
+            <div class="dev-team">DeepLora团队 开发</div>
+        </div>
+    </div>
+
+    <!-- 创建服务器模态框 -->
+    <div class="modal" id="createServerModal">
+        <div class="modal-content">
+            <h2>创建新服务器</h2>
+            <div class="form-group">
+                <label>服务器名称</label>
+                <input type="text" id="serverName" placeholder="输入服务器名称">
+            </div>
+            <div class="form-group">
+                <label>服务器描述</label>
+                <textarea id="serverDescription" placeholder="输入服务器描述" rows="2"></textarea>
+            </div>
+            <div class="checkbox-group">
+                <input type="checkbox" id="serverEncrypted" onchange="togglePasswordField()">
+                <label>加密服务器</label>
+            </div>
+            <div class="form-group" id="passwordField" style="display: none;">
+                <label>服务器密码</label>
+                <input type="password" id="serverPassword" placeholder="输入服务器密码">
+            </div>
+            <button class="btn" onclick="createServer()">创建服务器</button>
+            <button class="btn btn-secondary" onclick="hideModal('createServerModal')">取消</button>
+        </div>
+    </div>
+
+    <!-- 个人中心模态框 -->
+    <div class="modal" id="profileModal">
+        <div class="modal-content">
+            <h2>个人中心</h2>
+            <div class="form-group">
+                <label>用户名</label>
+                <input type="text" id="profileUsername" readonly>
+            </div>
+            <div class="form-group">
+                <label>个性签名</label>
+                <textarea id="profileSignature" placeholder="输入个性签名" rows="2"></textarea>
+            </div>
+            <button class="btn" onclick="updateProfile()">更新资料</button>
+            <button class="btn btn-secondary" onclick="hideModal('profileModal')">取消</button>
+        </div>
+    </div>
+
+    <!-- 文件上传模态框 -->
+    <div class="modal" id="fileUploadModal">
+        <div class="modal-content">
+            <h2>上传文件</h2>
+            <div class="form-group">
+                <input type="file" id="fileInput" accept="*">
+            </div>
+            <button class="btn" onclick="uploadFile()">上传</button>
+            <button class="btn btn-secondary" onclick="hideModal('fileUploadModal')">取消</button>
+        </div>
+    </div>
+
+    <!-- 加入服务器密码模态框 -->
+    <div class="modal" id="serverPasswordModal">
+        <div class="modal-content">
+            <h2>输入服务器密码</h2>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="serverJoinPassword" placeholder="输入服务器密码">
+            </div>
+            <button class="btn" onclick="joinServerWithPassword()">加入</button>
+            <button class="btn btn-secondary" onclick="hideModal('serverPasswordModal')">取消</button>
+        </div>
+    </div>
+
+    <input type="file" id="hiddenFileInput" style="display: none;">
+
+    <script>
+    const API_BASE = 'https://xjchat.vahe.dpdns.org/api';
+        let currentUser = null;
+        let currentServer = null;
+        let currentPrivateChat = null;
+        let currentChannel = 'general';
+        let messagePollInterval = null;
+        let privateChatInterval = null;
+        let selectedServerForJoin = null;
+
+        // 页面管理
+        function showPage(pageId) {
+            // 隐藏所有页面
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active', 'previous');
+            });
+            
+            // 显示目标页面
+            document.getElementById(pageId).classList.add('active');
+            
+            // 更新底部导航状态
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            switch(pageId) {
+                case 'serversPage':
+                    document.querySelector('.nav-item:nth-child(1)').classList.add('active');
+                    document.getElementById('headerTitle').textContent = '服务器列表';
+                    updateHeaderActions();
+                    break;
+                case 'friendsPage':
+                    document.querySelector('.nav-item:nth-child(2)').classList.add('active');
+                    document.getElementById('headerTitle').textContent = '我的好友';
+                    loadFriends();
+                    updateHeaderActions();
+                    break;
+                case 'searchPage':
+                    document.querySelector('.nav-item:nth-child(3)').classList.add('active');
+                    document.getElementById('headerTitle').textContent = '搜索用户';
+                    updateHeaderActions();
+                    break;
+                case 'chatPage':
+                    document.getElementById('headerTitle').textContent = '聊天';
+                    updateHeaderActions();
+                    break;
+            }
+        }
+
+        // 更新头部操作按钮
+        function updateHeaderActions() {
+            const headerActions = document.getElementById('headerActions');
+            if (currentUser) {
+                headerActions.innerHTML = `
+                    <button class="icon-btn" onclick="showModal('profileModal')">👤</button>
+                    <button class="icon-btn" onclick="showModal('createServerModal')">➕</button>
+                `;
+            } else {
+                headerActions.innerHTML = `
+                    <button class="icon-btn" onclick="showModal('loginModal')">👤</button>
+                    <button class="icon-btn" onclick="showModal('createServerModal')">➕</button>
+                `;
+            }
+        }
+
+        // Cookie 管理
+        function setCookie(name, value, days) {
+            const expires = new Date();
+            expires.setTime(expires.getTime() + days * 24 * 60 * 60 * 1000);
+            document.cookie = `${name}=${value};expires=${expires.toUTCString()};path=/;SameSite=Lax`;
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i=0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        function deleteCookie(name) {
+            document.cookie = name + '=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = 'notification';
+            notification.textContent = message;
+            notification.style.borderLeftColor = type === 'error' ? 'var(--error)' : 'var(--primary)';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+
+        // 模态框控制
+        function showModal(modalId) {
+            document.getElementById(modalId).classList.add('active');
+        }
+
+        function hideModal(modalId) {
+            document.getElementById(modalId).classList.remove('active');
+        }
+
+        function togglePasswordField() {
+            const passwordField = document.getElementById('passwordField');
+            passwordField.style.display = document.getElementById('serverEncrypted').checked ? 'block' : 'none';
+        }
+
+        // 用户认证
+        async function login() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showNotification('请输入用户名和密码', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    updateUI();
+                    hideModal('loginModal');
+                    showNotification('登录成功！');
+                    loadServers();
+                    loadFriends();
+                    updateHeaderActions();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('网络错误，请检查服务器连接', 'error');
+            }
+        }
+
+        async function register() {
+            const username = document.getElementById('loginUsername').value;
+            const password = document.getElementById('loginPassword').value;
+
+            if (!username || !password) {
+                showNotification('请输入用户名和密码', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('注册成功！请登录');
+                    switchToLogin();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('网络错误，请检查服务器连接', 'error');
+            }
+        }
+
+        function switchToRegister() {
+            document.getElementById('modalTitle').textContent = '注册星界账户';
+            const loginBtn = document.querySelector('#loginModal .btn');
+            loginBtn.textContent = '注册';
+            loginBtn.onclick = register;
+        }
+
+        function switchToLogin() {
+            document.getElementById('modalTitle').textContent = '登录星界网络';
+            const loginBtn = document.querySelector('#loginModal .btn');
+            loginBtn.textContent = '登录';
+            loginBtn.onclick = login;
+        }
+
+        // 自动登录
+        async function autoLogin() {
+            try {
+                const response = await fetch(`${API_BASE}/verify_session`, {
+                    method: 'GET',
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    currentUser = data.user;
+                    updateUI();
+                    loadServers();
+                    loadFriends();
+                    updateHeaderActions();
+                    showNotification('自动登录成功！');
+                } else {
+                    deleteCookie('session_id');
+                }
+            } catch (error) {
+                console.error('自动登录失败:', error);
+            }
+        }
+
+        // 服务器管理
+        async function loadServers() {
+            try {
+                const response = await fetch(`${API_BASE}/servers`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayServers(data.servers);
+                }
+            } catch (error) {
+                console.error('加载服务器失败:', error);
+            }
+        }
+
+        function displayServers(servers) {
+            const serverList = document.getElementById('serverList');
+            
+            if (Object.keys(servers).length === 0) {
+                serverList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🏠</div>
+                        <div>暂无服务器</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">点击右上角+创建服务器</div>
+                    </div>
+                `;
+                return;
+            }
+
+            serverList.innerHTML = '';
+            Object.values(servers).forEach(server => {
+                const serverElement = document.createElement('div');
+                serverElement.className = 'server-item';
+                serverElement.innerHTML = `
+                    <div style="font-weight: bold;">
+                        ${server.name}
+                        ${server.is_encrypted ? '<span class="server-lock">🔒</span>' : ''}
+                    </div>
+                    <div class="server-info">
+                        创建者: ${server.creator}
+                        ${server.description ? ` | ${server.description}` : ''}
+                    </div>
+                `;
+                serverElement.onclick = () => joinServer(server);
+                serverList.appendChild(serverElement);
+            });
+        }
+
+        async function joinServer(server) {
+            if (!currentUser) {
+                showNotification('请先登录', 'error');
+                return;
+            }
+
+            selectedServerForJoin = server;
+
+            if (server.is_encrypted) {
+                showModal('serverPasswordModal');
+            } else {
+                await performJoinServer();
+            }
+        }
+
+        async function joinServerWithPassword() {
+            const password = document.getElementById('serverJoinPassword').value;
+            if (!password) {
+                showNotification('请输入密码', 'error');
+                return;
+            }
+            await performJoinServer(password);
+        }
+
+        async function performJoinServer(password = null) {
+            try {
+                const response = await fetch(`${API_BASE}/servers/${selectedServerForJoin.id}/join`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        user_id: currentUser.id,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentServer = selectedServerForJoin;
+                    currentPrivateChat = null;
+                    updateUI();
+                    startMessagePolling();
+                    hideModal('serverPasswordModal');
+                    showNotification(`已加入服务器: ${selectedServerForJoin.name}`);
+                    showPage('chatPage');
+                    updateChatHeader();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('加入服务器失败', 'error');
+            }
+        }
+
+        // 退出服务器 - 修复版本
+        function exitServer() {
+            // 停止所有轮询
+            if (messagePollInterval) {
+                clearInterval(messagePollInterval);
+                messagePollInterval = null;
+            }
+            if (privateChatInterval) {
+                clearInterval(privateChatInterval);
+                privateChatInterval = null;
+            }
+            
+            currentServer = null;
+            currentPrivateChat = null;
+            
+            // 更新UI
+            updateUI();
+            updateChatHeader();
+            
+            // 清空消息容器
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = `
+                <div class="message">
+                    <div class="message-header">
+                        <span class="message-sender">系统</span>
+                        <span>现在</span>
+                    </div>
+                    <div class="message-content">
+                        欢迎来到星界聊天！请加入服务器开始聊天。
+                    </div>
+                </div>
+            `;
+            
+            // 禁用输入框
+            document.getElementById('messageInput').disabled = true;
+            document.getElementById('sendButton').disabled = true;
+            
+            // 隐藏退出按钮
+            document.getElementById('exitServerBtn').style.display = 'none';
+            
+            showNotification('已退出服务器');
+            showPage('serversPage');
+        }
+
+        // 退出聊天（返回）
+        function exitChat() {
+            if (currentPrivateChat) {
+                // 退出私聊，回到公共聊天
+                exitPrivateChat();
+            } else if (currentServer) {
+                // 退出服务器，回到服务器列表
+                exitServer();
+            } else {
+                // 回到服务器列表
+                showPage('serversPage');
+            }
+        }
+
+        async function createServer() {
+            if (!currentUser) {
+                showNotification('请先登录', 'error');
+                return;
+            }
+
+            const serverName = document.getElementById('serverName').value;
+            const description = document.getElementById('serverDescription').value;
+            const isEncrypted = document.getElementById('serverEncrypted').checked;
+            const password = isEncrypted ? document.getElementById('serverPassword').value : null;
+
+            if (!serverName) {
+                showNotification('请输入服务器名称', 'error');
+                return;
+            }
+
+            if (isEncrypted && !password) {
+                showNotification('请输入服务器密码', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/servers/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        name: serverName, 
+                        creator: currentUser.username,
+                        description: description,
+                        password: password
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    hideModal('createServerModal');
+                    showNotification('服务器创建成功！');
+                    loadServers();
+                    // 重置表单
+                    document.getElementById('serverName').value = '';
+                    document.getElementById('serverDescription').value = '';
+                    document.getElementById('serverEncrypted').checked = false;
+                    document.getElementById('serverPassword').value = '';
+                    togglePasswordField();
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('创建服务器失败', 'error');
+            }
+        }
+
+        // 好友功能
+        async function loadFriends() {
+            if (!currentUser) return;
+
+            try {
+                const response = await fetch(`${API_BASE}/friends/list?user_id=${currentUser.id}`);
+                const data = await response.json();
+
+                if (data.success) {
+                    displayFriends(data.friends);
+                }
+            } catch (error) {
+                console.error('加载好友失败:', error);
+            }
+        }
+
+        function displayFriends(friends) {
+            const friendsList = document.getElementById('friendsList');
+            
+            if (friends.length === 0) {
+                friendsList.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">👥</div>
+                        <div>暂无好友</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">去搜索页面添加好友吧</div>
+                    </div>
+                `;
+                return;
+            }
+
+            friendsList.innerHTML = '';
+            friends.forEach(friend => {
+                const friendElement = document.createElement('div');
+                friendElement.className = 'friend-item';
+                friendElement.innerHTML = `
+                    <div class="friend-avatar">${friend.username.charAt(0).toUpperCase()}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${friend.username}</div>
+                        <div class="friend-signature">${friend.profile.signature}</div>
+                    </div>
+                    <button class="chat-btn" onclick="startPrivateChat(${JSON.stringify(friend).replace(/"/g, '&quot;')})">
+                        私聊
+                    </button>
+                `;
+                friendsList.appendChild(friendElement);
+            });
+        }
+
+        // 私聊功能 - 修复版本
+        function startPrivateChat(friend) {
+            if (!currentServer) {
+                showNotification('请先加入一个服务器才能开始私聊', 'error');
+                return;
+            }
+            
+            // 停止公共消息轮询
+            if (messagePollInterval) {
+                clearInterval(messagePollInterval);
+                messagePollInterval = null;
+            }
+            
+            currentPrivateChat = friend;
+            
+            // 更新UI显示私聊状态
+            updateChatHeader();
+            
+            // 清空消息容器并加载私聊消息
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            
+            // 加载私聊消息
+            loadPrivateMessages();
+            
+            // 开始私聊消息轮询
+            if (privateChatInterval) {
+                clearInterval(privateChatInterval);
+            }
+            privateChatInterval = setInterval(() => {
+                loadPrivateMessages();
+            }, 2000);
+            
+            // 启用输入框
+            document.getElementById('messageInput').disabled = false;
+            document.getElementById('sendButton').disabled = false;
+            
+            showNotification(`开始与 ${friend.username} 的私聊`);
+        }
+
+        // 退出私聊 - 修复版本
+        function exitPrivateChat() {
+            if (privateChatInterval) {
+                clearInterval(privateChatInterval);
+                privateChatInterval = null;
+            }
+            
+            currentPrivateChat = null;
+            
+            // 更新UI显示公共聊天
+            updateChatHeader();
+            
+            // 清空消息容器
+            const container = document.getElementById('messagesContainer');
+            container.innerHTML = '';
+            
+            // 重新开始公共消息轮询
+            if (currentServer) {
+                startMessagePolling();
+            }
+            
+            showNotification('已退出私聊');
+        }
+
+        // 加载私聊消息
+        async function loadPrivateMessages() {
+            if (!currentPrivateChat || !currentUser || !currentServer) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/private_chat/messages?user1=${currentUser.id}&user2=${currentPrivateChat.id}&server_id=${currentServer.id}&limit=100`
+                );
+                const data = await response.json();
+
+                if (data.success) {
+                    displayPrivateMessages(data.messages);
+                }
+            } catch (error) {
+                console.error('加载私聊消息失败:', error);
+            }
+        }
+
+        // 显示私聊消息
+        function displayPrivateMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            
+            // 只添加新消息
+            const existingMessageIds = new Set(
+                Array.from(container.querySelectorAll('.message')).map(msg => msg.dataset.messageId)
+            );
+
+            let hasNewMessages = false;
+            
+            // 如果没有消息，显示欢迎信息
+            if (messages.length === 0 && container.children.length === 0) {
+                container.innerHTML = `
+                    <div class="message">
+                        <div class="message-header">
+                            <span class="message-sender">系统</span>
+                            <span>现在</span>
+                        </div>
+                        <div class="message-content">
+                            开始与 ${currentPrivateChat.username} 的私聊，发送消息开始对话吧！
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            messages.forEach(message => {
+                if (!existingMessageIds.has(message.id)) {
+                    const messageElement = createPrivateMessageElement(message);
+                    container.appendChild(messageElement);
+                    hasNewMessages = true;
+                }
+            });
+
+            if (hasNewMessages) {
+                // 滚动到底部
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // 创建私聊消息元素
+        function createPrivateMessageElement(message) {
+            const messageElement = document.createElement('div');
+            messageElement.className = 'message private';
+            messageElement.dataset.messageId = message.id;
+            
+            const timestamp = new Date(message.timestamp).toLocaleTimeString();
+            const isFromMe = message.from_user === currentUser.id;
+            
+            messageElement.innerHTML = `
+                <div class="message-header">
+                    <span class="message-sender message-private">
+                        ${isFromMe ? '我' : message.from_username}
+                    </span>
+                    <span>${timestamp}</span>
+                </div>
+                <div class="message-content">${message.content}</div>
+            `;
+            
+            return messageElement;
+        }
+
+        // 发送私聊消息
+        async function sendPrivateMessage(content) {
+            if (!currentPrivateChat || !currentUser || !currentServer) {
+                showNotification('无法发送私聊消息', 'error');
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/private_chat/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from_user: currentUser.id,
+                        from_username: currentUser.username,
+                        to_user: currentPrivateChat.id,
+                        to_username: currentPrivateChat.username,
+                        content: content,
+                        server_id: currentServer.id
+                    })
+                });
+
+                const data = await response.json();
+                return data.success;
+            } catch (error) {
+                console.error('发送私聊消息失败:', error);
+                return false;
+            }
+        }
+
+        // 搜索功能
+        let searchTimeout = null;
+        async function searchUsers() {
+            const query = document.getElementById('userSearch').value.trim();
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (!query) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">🔍</div>
+                        <div>搜索用户</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">输入用户名搜索并添加好友</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 防抖处理
+            clearTimeout(searchTimeout);
+            searchTimeout = setTimeout(async () => {
+                try {
+                    const response = await fetch(`${API_BASE}/users/search?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+
+                    if (data.success) {
+                        displaySearchResults(data.users);
+                    }
+                } catch (error) {
+                    console.error('搜索用户失败:', error);
+                }
+            }, 300);
+        }
+
+        function displaySearchResults(users) {
+            const resultsContainer = document.getElementById('searchResults');
+            
+            if (users.length === 0) {
+                resultsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-icon">😔</div>
+                        <div>未找到用户</div>
+                        <div style="font-size: 0.9em; margin-top: 10px;">请尝试其他搜索关键词</div>
+                    </div>
+                `;
+                return;
+            }
+
+            resultsContainer.innerHTML = '';
+            users.forEach(user => {
+                if (user.id === currentUser.id) return;
+
+                const resultElement = document.createElement('div');
+                resultElement.className = 'search-result-item';
+                resultElement.innerHTML = `
+                    <div class="friend-avatar">${user.username.charAt(0).toUpperCase()}</div>
+                    <div class="friend-info">
+                        <div class="friend-name">${user.username}</div>
+                        <div class="friend-signature">${user.profile.signature}</div>
+                    </div>
+                    <div style="display: flex; gap: 5px;">
+                        <button class="chat-btn" onclick="addFriend(${JSON.stringify(user).replace(/"/g, '&quot;')})">
+                            加好友
+                        </button>
+                        <button class="chat-btn" onclick="startPrivateChat(${JSON.stringify(user).replace(/"/g, '&quot;')})">
+                            私聊
+                        </button>
+                    </div>
+                `;
+                resultsContainer.appendChild(resultElement);
+            });
+        }
+
+        async function addFriend(user) {
+            if (!currentUser) {
+                showNotification('请先登录', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/friends/add`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: currentUser.id,
+                        friend_id: user.id
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`已添加好友: ${user.username}`);
+                    document.getElementById('userSearch').value = '';
+                    searchUsers(); // 刷新搜索结果
+                    loadFriends(); // 刷新好友列表
+                } else {
+                    showNotification('添加好友失败', 'error');
+                }
+            } catch (error) {
+                showNotification('添加好友失败', 'error');
+            }
+        }
+
+        // 个人资料管理
+        function showProfileModal() {
+            if (!currentUser) {
+                showNotification('请先登录', 'error');
+                return;
+            }
+
+            document.getElementById('profileUsername').value = currentUser.username;
+            document.getElementById('profileSignature').value = currentUser.profile.signature;
+            showModal('profileModal');
+        }
+
+        async function updateProfile() {
+            const signature = document.getElementById('profileSignature').value;
+
+            try {
+                const response = await fetch(`${API_BASE}/profile/update`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: currentUser.username,
+                        profile: {
+                            signature: signature
+                        }
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    currentUser = data.user;
+                    updateUI();
+                    hideModal('profileModal');
+                    showNotification('资料更新成功！');
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            } catch (error) {
+                showNotification('更新资料失败', 'error');
+            }
+        }
+
+        // 消息功能
+        function startMessagePolling() {
+            if (messagePollInterval) {
+                clearInterval(messagePollInterval);
+            }
+
+            loadMessages();
+            updateOnlineUsers();
+
+            messagePollInterval = setInterval(() => {
+                loadMessages();
+                updateOnlineUsers();
+            }, 2000);
+        }
+
+        async function loadMessages() {
+            if (!currentServer) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/servers/${currentServer.id}/messages?channel=${currentChannel}&user_id=${currentUser.id}`
+                );
+                const data = await response.json();
+
+                if (data.success) {
+                    displayMessages(data.messages);
+                }
+            } catch (error) {
+                console.error('加载消息失败:', error);
+            }
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('messagesContainer');
+            
+            // 只添加新消息
+            const existingMessageIds = new Set(
+                Array.from(container.querySelectorAll('.message')).map(msg => msg.dataset.messageId)
+            );
+
+            let hasNewMessages = false;
+
+            messages.forEach(message => {
+                if (!existingMessageIds.has(message.id)) {
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message';
+                    if (message.type === 'private') {
+                        messageElement.classList.add('private');
+                    }
+                    messageElement.dataset.messageId = message.id;
+                    
+                    const timestamp = new Date(message.timestamp).toLocaleTimeString();
+                    
+                    let messageContent = message.content;
+                    if (message.file_info) {
+                        messageContent += `
+                            <div class="file-attachment">
+                                <span class="file-icon">📎</span>
+                                <span>${message.file_info.original_name}</span>
+                                <a href="${API_BASE}/download/${message.file_info.filename}" class="file-download" download>
+                                    下载
+                                </a>
+                            </div>
+                        `;
+                    }
+                    
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="message-sender ${message.type === 'private' ? 'message-private' : ''}">${message.from_username}</span>
+                            <span>${timestamp}</span>
+                        </div>
+                        <div class="message-content">${messageContent}</div>
+                    `;
+                    
+                    container.appendChild(messageElement);
+                    hasNewMessages = true;
+                }
+            });
+
+            if (hasNewMessages) {
+                // 滚动到底部
+                container.scrollTop = container.scrollHeight;
+            }
+        }
+
+        // 更新发送消息函数
+        async function sendMessage() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (!content) return;
+
+            let success = false;
+
+            if (currentPrivateChat && currentServer) {
+                // 发送私聊消息
+                success = await sendPrivateMessage(content);
+            } else if (currentServer) {
+                // 发送公共消息
+                success = await sendPublicMessage(content);
+            } else {
+                showNotification('请先加入服务器', 'error');
+                return;
+            }
+
+            if (success) {
+                input.value = '';
+                // 自动调整输入框高度
+                input.style.height = 'auto';
+                
+                // 重新加载消息
+                if (currentPrivateChat) {
+                    loadPrivateMessages();
+                } else {
+                    loadMessages();
+                }
+            } else {
+                showNotification('发送消息失败', 'error');
+            }
+        }
+
+        // 发送公共消息
+        async function sendPublicMessage(content) {
+            try {
+                const response = await fetch(`${API_BASE}/servers/${currentServer.id}/messages/send`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        from_user: currentUser.id,
+                        from_username: currentUser.username,
+                        content: content,
+                        channel: currentChannel,
+                        type: 'public'
+                    })
+                });
+
+                const data = await response.json();
+                return data.success;
+            } catch (error) {
+                console.error('发送公共消息失败:', error);
+                return false;
+            }
+        }
+
+        // 文件上传
+        function showFileUpload() {
+            if (!currentServer || !currentUser) {
+                showNotification('请先加入服务器', 'error');
+                return;
+            }
+            document.getElementById('fileInput').click();
+        }
+
+        async function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+
+            if (!file) {
+                showNotification('请选择文件', 'error');
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append('file', file);
+
+            try {
+                showNotification('正在上传文件...');
+                const response = await fetch(`${API_BASE}/upload`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 发送文件消息
+                    const messageResponse = await fetch(`${API_BASE}/servers/${currentServer.id}/messages/send`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            from_user: currentUser.id,
+                            from_username: currentUser.username,
+                            content: `分享了文件: ${data.original_name}`,
+                            channel: currentChannel,
+                            type: 'public',
+                            file_info: {
+                                filename: data.filename,
+                                original_name: data.original_name
+                            }
+                        })
+                    });
+
+                    if (messageResponse.ok) {
+                        fileInput.value = '';
+                        showNotification('文件上传成功！');
+                        if (currentPrivateChat) {
+                            loadPrivateMessages();
+                        } else {
+                            loadMessages();
+                        }
+                    }
+                } else {
+                    showNotification('文件上传失败', 'error');
+                }
+            } catch (error) {
+                showNotification('文件上传失败', 'error');
+            }
+        }
+
+        // AI 助手
+        async function askAI() {
+            const input = document.getElementById('messageInput');
+            const content = input.value.trim();
+
+            if (!content) {
+                showNotification('请输入问题', 'error');
+                return;
+            }
+
+            try {
+                showNotification('AI正在思考...');
+                const response = await fetch(`${API_BASE}/ai/chat`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message: content
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    // 在聊天框中显示AI回复
+                    const container = document.getElementById('messagesContainer');
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message ai';
+                    messageElement.innerHTML = `
+                        <div class="message-header">
+                            <span class="message-sender message-ai">AI助手</span>
+                            <span>${new Date().toLocaleTimeString()}</span>
+                        </div>
+                        <div class="message-content">${data.response}</div>
+                    `;
+                    container.appendChild(messageElement);
+                    container.scrollTop = container.scrollHeight;
+                } else {
+                    showNotification('AI服务暂时不可用', 'error');
+                }
+            } catch (error) {
+                showNotification('AI服务错误', 'error');
+            }
+        }
+
+        async function updateOnlineUsers() {
+            if (!currentServer || !currentUser) return;
+
+            try {
+                const response = await fetch(
+                    `${API_BASE}/servers/${currentServer.id}/online_users?user_id=${currentUser.id}`
+                );
+                const data = await response.json();
+
+                if (data.success) {
+                    document.getElementById('onlineCount').textContent = 
+                        `${data.online_users.length} 人在线`;
+                }
+            } catch (error) {
+                console.error('更新在线用户失败:', error);
+            }
+        }
+
+        // 更新聊天头部显示
+        function updateChatHeader() {
+            const chatTitle = document.getElementById('chatTitle');
+            const onlineCount = document.getElementById('onlineCount');
+            const exitServerBtn = document.getElementById('exitServerBtn');
+
+            if (currentPrivateChat) {
+                // 私聊模式
+                chatTitle.textContent = `私聊: ${currentPrivateChat.username}`;
+                onlineCount.textContent = '私聊会话';
+                exitServerBtn.style.display = 'none';
+            } else if (currentServer) {
+                // 公共聊天模式
+                chatTitle.textContent = currentServer.name;
+                onlineCount.textContent = '公共聊天';
+                exitServerBtn.style.display = 'block';
+            } else {
+                // 未加入服务器
+                chatTitle.textContent = '选择服务器';
+                onlineCount.textContent = '0 人在线';
+                exitServerBtn.style.display = 'none';
+            }
+        }
+
+        // UI 更新
+        function updateUI() {
+            const messageInput = document.getElementById('messageInput');
+            const sendButton = document.getElementById('sendButton');
+
+            if (currentUser) {
+                messageInput.disabled = false;
+                sendButton.disabled = !currentServer;
+                
+                updateChatHeader();
+            } else {
+                messageInput.disabled = true;
+                sendButton.disabled = true;
+                updateChatHeader();
+            }
+        }
+
+        // 输入框自动调整高度
+        function setupAutoResize() {
+            const textarea = document.getElementById('messageInput');
+            textarea.addEventListener('input', function() {
+                this.style.height = 'auto';
+                this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+            });
+        }
+
+        // 事件监听
+        document.getElementById('messageInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.getElementById('userSearch').addEventListener('input', searchUsers);
+
+        document.getElementById('fileInput').addEventListener('change', uploadFile);
+
+        // 初始化
+        autoLogin();
+        updateUI();
+        loadServers();
+        setupAutoResize();
+
+        // 全局点击关闭模态框
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('modal')) {
+                e.target.classList.remove('active');
+            }
+        });
+
+        // 页面卸载前保存状态
+        window.addEventListener('beforeunload', () => {
+            if (currentUser) {
+                setCookie('last_server', currentServer ? currentServer.id : '', 7);
+            }
+        });
+    </script>
+</body>
+</html>
